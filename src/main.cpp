@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#define REDPIN 5
-#define GREENPIN 6
+#define REDPIN 6
+#define GREENPIN 5
 #define BLUEPIN 3
 #define SENSORPIN 2
 
@@ -15,6 +15,11 @@ bool lastSensorState = LOW;
 
 long lastDebounceTime;
 long lastDeltaTime;
+
+float getSpeed(long deltaTime);
+void controlLED(float speed);
+
+byte blueLED, redLED, greenLED;
 
 void setup() {
   pinMode(REDPIN, OUTPUT);
@@ -67,11 +72,43 @@ float getSpeed(long deltaTime) { // in m/s
 
 void controlLED(float speed) {
   //Serial.println(speed*3.6);
-  int value = speed*50;
-  Serial.println(value);
-  if(speed < 25.5) {
-    analogWrite(REDPIN, value);
+  float kmh = speed*3.6;
+  Serial.print(kmh);
+  if(kmh == 0.0) {
+      blueLED = 0;
+      greenLED = 0;
+      redLED = 0;
+  } else if(kmh < 5.0) {
+      blueLED = 0;
+      greenLED = kmh*51.0;
+      redLED = 0;
+  } else if(kmh < 10.0){
+      greenLED = 255.0-(kmh-5.0)*51.0;
+      redLED = 0;
+      blueLED = (kmh-5.0)*51.0;
+  } else if (kmh < 15.0){
+      greenLED = 0;
+      redLED = (kmh-10.0)*51.0;
+      blueLED = 255.0-(kmh-10.0)*51.0;
   } else {
-    analogWrite(REDPIN, 254);
+    blueLED = 0;
+    greenLED = 0;
+    redLED = 0;
   }
+  Serial.print(" ");
+  Serial.print(redLED);
+  Serial.print(" ");
+  Serial.print(blueLED);
+  Serial.print(" ");
+  Serial.println(greenLED);
+  analogWrite(REDPIN, redLED);
+  analogWrite(GREENPIN, greenLED);
+  analogWrite(BLUEPIN, blueLED);
 }
+
+//up to 30 km/h
+//blue max 1
+//blue max green man -7-
+//green max -14-
+//greenmax redmax-21-
+//redmax -28
